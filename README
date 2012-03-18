@@ -1,0 +1,14 @@
+This are modified files of the visualization plugin of xbmc
+
+They are located in of the xbmc-project at the following location:
+<SOURCE FOLDER of XBMC>/xbmc/visualizations/OpenGLSpectrum/ ([1])
+
+
+----- INSTALLATION of the plugin -----
+type 'make'  in [1], to create the new plugin
+
+This will be created in 
+<SOURCE FOLDER of XBMC>/xbmc/addons/visualization.glspectrum/opengl_spectrum.vis
+
+This has to be copied into the folder of the running system (the installation of the live-CD in my case)
+-> sudo cp <SOURCE FOLDER of XBMC>/xbmc/addons/visualization.glspectrum/opengl_spectrum.vis  /usr/lib/xbmc/addons/visualization.glspectrum/
