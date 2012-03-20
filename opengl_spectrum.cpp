@@ -117,6 +117,7 @@ GLfloat hSpeed = 0.05;
 int sock;
 struct sockaddr_in server;
 
+
 artnet_send_t* artnetoutput = NULL;
 #define SPECTRUM_ARTNET_MAX	64
 
@@ -307,7 +308,6 @@ ADDON_STATUS ADDON_Create(void* hdl, void* props)
 	char targetIP[] = "10.23.42.154";
 	artnetoutput = artnet_send_create(targetIP, 0, SPECTRUM_ARTNET_MAX);
 
-
   return ADDON_STATUS_NEED_SETTINGS;
 }
 
@@ -374,8 +374,14 @@ extern "C" void AudioData(const short* pAudioData, int iAudioDataLength, float *
   int y=0;
   GLfloat val;
 
+  static GLfloat localmax[NUM_BANDS] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+  static GLfloat lastout[NUM_BANDS] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+  static unsigned int times=0;
+  static unsigned int stepvar = 0;
+  static unsigned char color[3] = {0, 0, 255};
+  
   int xscale[] = {0, 1, 2, 3, 5, 7, 10, 14, 20, 28, 40, 54, 74, 101, 137, 187, 255};
-
+  
   for(y = 15; y > 0; y--)
   {
     for(i = 0; i < 16; i++)
@@ -414,11 +420,53 @@ extern "C" void AudioData(const short* pAudioData, int iAudioDataLength, float *
 
 	if (NUM_BANDS * 4 <= SPECTRUM_ARTNET_MAX)
 	{
-		for(i = 0; i < NUM_BANDS; i++)
-  		{
-			artnetoutput->data[i*4 + 2] = 255 * heights[i][i];
+			
+		if(times % 50 == 0){
+			if(stepvar == 0){
+				color[0]=0;
+				color[1]=0;
+				color[2]=255;
+			}
+			if(stepvar <= 255) {
+				color[0]++;
+				color[2]--;
+			}
+			else if(stepvar <= 511) {
+				color[0]--;
+				color[1]++;
+			}
+			else {
+				color[1]--;
+				color[2]++;
+			}
+			if(stepvar >= 767) {
+				stepvar = 0;
+			}
+			else
+				stepvar++;
 		}
-		artnet_send_send(artnetoutput);
+
+		if(times % 3 == 0){ //Nur jedes n. Bild verwenden
+		
+			for(i = 0; i < NUM_BANDS; i ++)
+  			{
+				if(localmax[i] < heights[i][1]){
+					localmax[i] = heights[i][1];
+				}
+				//for(j=0; j<NUM_BANDS; j += 2){
+				
+					lastout[i] = lastout[i] * 0.95 + 0.05 * heights[i][i];			
+	
+					artnetoutput->data[ i*4 ] = color[0] * (lastout[i] / localmax[i]);
+					artnetoutput->data[ i*4 + 1 ] = color[1] * (lastout[i] / localmax[i]);
+					artnetoutput->data[ i*4 + 2 ] = color[2] * (lastout[i] / localmax[i]);
+				//}
+			}
+			artnet_send_send(artnetoutput);
+		}
+		times++;
+		if(times > 2000000)
+			times =0;
 	}
 
 	}// only when artnet is available
