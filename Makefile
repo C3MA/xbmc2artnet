@@ -2,7 +2,7 @@ ARCH=i486-linux
 CXXFLAGS=-fPIC
 OBJS=opengl_spectrum.o artnet_send.o
 
-SLIB=/home/xbmc/development/xbmc/addons/visualization.glspectrum/opengl_spectrum.vis
+SLIB=/home/xbmc/Development/xbmc/addons/visualization.glspectrum/opengl_spectrum.vis
 
 ifeq (0,1)
   OBJS+=../EGLHelpers/Shader.o ../EGLHelpers/GUIShader.o ../../guilib/MatrixGLES.o
@@ -29,4 +29,4 @@ else
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -shared -g -o $(SLIB) -Wl,--unresolved-symbols=ignore-all $(OBJS)
 endif
 
-include /home/xbmc/development/xbmc/Makefile.include
+include /home/xbmc/Development/xbmc/Makefile.include

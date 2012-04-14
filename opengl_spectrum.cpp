@@ -416,58 +416,53 @@ extern "C" void AudioData(const short* pAudioData, int iAudioDataLength, float *
 	if (artnetoutput > 0) // only when artnet is available
 	{
 
-	memset(artnetoutput->data, 0, SPECTRUM_ARTNET_MAX);
+		memset(artnetoutput->data, 0, SPECTRUM_ARTNET_MAX);
 
-	if (NUM_BANDS * 4 <= SPECTRUM_ARTNET_MAX)
-	{
+		if (NUM_BANDS * 4 <= SPECTRUM_ARTNET_MAX)
+		{
 			
-		if(times % 50 == 0){
-			if(stepvar == 0){
-				color[0]=0;
-				color[1]=0;
-				color[2]=255;
-			}
-			if(stepvar <= 255) {
-				color[0]++;
-				color[2]--;
-			}
-			else if(stepvar <= 511) {
-				color[0]--;
-				color[1]++;
-			}
-			else {
-				color[1]--;
-				color[2]++;
-			}
-			if(stepvar >= 767) {
-				stepvar = 0;
-			}
-			else
-				stepvar++;
-		}
-
-		if(times % 3 == 0){ //Nur jedes n. Bild verwenden
-		
-			for(i = 0; i < NUM_BANDS; i ++)
-  			{
-				if(localmax[i] < heights[i][1]){
-					localmax[i] = heights[i][1];
+			if(times % 20 == 0){ //Nach jedem n-ten Frame die Farbtabelle ändern
+				if(stepvar == 0){
+					color[0]=0;
+					color[1]=0;
+					color[2]=255;
 				}
-				//for(j=0; j<NUM_BANDS; j += 2){
-				
-					lastout[i] = lastout[i] * 0.95 + 0.05 * heights[i][i];			
-	
+				if(stepvar <= 255) {
+					color[0]++;
+					color[2]--;
+				}
+				else if(stepvar <= 511) {
+					color[0]--;
+					color[1]++;
+				}
+				else {
+					color[1]--;
+					color[2]++;
+				}
+				if(stepvar >= 767) //Zurück auf Anfang
+					stepvar = 0;
+				else
+					stepvar++;
+			}
+
+			if(times % 3 == 0){ //Nur jedes n. Bild verwenden um zu senden
+				for(i = 0; i < NUM_BANDS; i ++)
+  				{
+					if(localmax[i] < heights[i][i]) {
+						localmax[i] = heights[i][1];
+					}
+					
+					lastout[i] = lastout[i] * 0.5 + 0.5 * heights[i][i]; //IIR Filterung der Helligkeitswechsel			
 					artnetoutput->data[ i*4 ] = color[0] * (lastout[i] / localmax[i]);
 					artnetoutput->data[ i*4 + 1 ] = color[1] * (lastout[i] / localmax[i]);
 					artnetoutput->data[ i*4 + 2 ] = color[2] * (lastout[i] / localmax[i]);
-				//}
+				}
+				artnet_send_send(artnetoutput);
 			}
-			artnet_send_send(artnetoutput);
+			times++;
+			if(times > 2000000)
+				times =0;
 		}
-		times++;
-		if(times > 2000000)
-			times =0;
-	}
 
 	}// only when artnet is available
 }
